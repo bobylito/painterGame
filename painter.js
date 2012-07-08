@@ -1,5 +1,11 @@
-//Experience 1 : playing with canvas
 (function(){
+var debug = 0;
+
+var l = {
+  distance : function(p1, p2){
+    return Math.sqrt( Math.pow(p2[1] - p1[1], 2) + Math.pow(p2[0] - p1[0], 2) )           
+  }
+}
 
 function updateKeyState(e, keys){
   var state = (e.type === "keydown"),
@@ -37,16 +43,23 @@ function createPlayer(keys, properties, dropPaint){
     animate:function(time, w, h){
       var dx = 0,
           dy = 0;
-      if(keys[0]) p.theta -= Math.PI/30
-      if(keys[2]) p.theta += Math.PI/30
+      if(keys[0]) {
+        p.theta = (p.theta - Math.PI/30) % (Math.PI * 2)
+        console.log(p.theta)
+      }
+      if(keys[2]){
+        p.theta = (p.theta + Math.PI/30) % (Math.PI * 2)
+        console.log(p.theta)
+      }
       if(keys[1]) {
         dx += Math.cos(p.theta) * 3 
         dy += Math.sin(p.theta) * 3
       }
       if(keys[3]) {
-        dx -= Math.cos(p.theta)
-        dy -= Math.sin(p.theta)
+        dx -= Math.cos(p.theta) * 3
+        dy -= Math.sin(p.theta) * 3
       }
+
       p.x += dx;
       p.y += dy;
 
@@ -80,25 +93,34 @@ function createPlayer(keys, properties, dropPaint){
 function createCleaner(properties, cleanPaint){
   var p = properties,
       lastPos = [p.x, p.y],
+      target = [p.x, p.y],
       rotation = 0;
   return {
     animate:function(time, w, h){
       var dx = 0,
           dy = 0,
-          pixelParcourus = Math.sqrt(Math.pow((lastPos[1] - p.y),2) + Math.pow((lastPos[0] - p.x),2)) ;
-      if(pixelParcourus > 100){
-        var dtheta = Math.PI/20;
-        rotation -= dtheta;
-        p.theta += dtheta;
-        if(rotation < 0){
-          lastPos = [p.x, p.y];
+          distanceTarget = l.distance(target, [p.x, p.y]);
+      if(distanceTarget < 10){
+        target = [Math.random() * w, Math.random() * h]; 
+      }
+      
+      if( p.x < target[0] + 5 && target[0] -5 < p.x){
+        if(target[1] > p.y ){
+          p.theta = Math.PI/2
+        }
+        else{
+          p.theta = 3*Math.PI/2
         }
       }
-      else{
-        dx += Math.cos(p.theta) * 3;
-        dy += Math.sin(p.theta) * 3;
-        rotation += Math.random() * 3 * Math.PI/100;
+      else if(target[0] < p.x){
+        p.theta = Math.PI
       }
+      else {
+        p.theta = 0
+      }
+
+      dx = Math.cos(p.theta) * 3;
+      dy = Math.sin(p.theta) * 3;
       
       p.x += dx;
       p.y += dy;
@@ -115,6 +137,10 @@ function createCleaner(properties, cleanPaint){
       ctx.fillRect(-10, -10, 20, 20);
       ctx.rotate(-p.theta);
       ctx.translate(-p.x, -p.y);
+      if(debug){
+        ctx.fillStyle="#DDD";
+        ctx.fillRect(target[0]-5, target[1]-5, 10,10);
+      }
     }
   };
 }
@@ -156,8 +182,8 @@ function play(){
             theta : 0
           }, dropPaint));
           loop.registerAnimation(createCleaner( {
-            x: w/2 + 50,
-            y: h/2 + 50,
+            x: 50,
+            y: 50,
             theta : Math.PI 
           }, cleanPaint))
           loop.registerAnimation(createCleaner( {
