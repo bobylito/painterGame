@@ -35,8 +35,7 @@ function createPlayer(keys, properties, dropPaint){
   loop.registerAnimation(ammo);
   return {
     animate:function(time, w, h){
-      var t = (time||20)/10,
-          dx = 0,
+      var dx = 0,
           dy = 0;
       if(keys[0]) p.theta -= Math.PI/30
       if(keys[2]) p.theta += Math.PI/30
@@ -78,6 +77,48 @@ function createPlayer(keys, properties, dropPaint){
   };
 }
 
+function createCleaner(properties, cleanPaint){
+  var p = properties,
+      lastPos = [p.x, p.y],
+      rotation = 0;
+  return {
+    animate:function(time, w, h){
+      var dx = 0,
+          dy = 0,
+          pixelParcourus = Math.sqrt(Math.pow((lastPos[1] - p.y),2) + Math.pow((lastPos[0] - p.x),2)) ;
+      if(pixelParcourus > 100){
+        var dtheta = Math.PI/20;
+        rotation -= dtheta;
+        p.theta += dtheta;
+        if(rotation < 0){
+          lastPos = [p.x, p.y];
+        }
+      }
+      else{
+        dx += Math.cos(p.theta) * 3;
+        dy += Math.sin(p.theta) * 3;
+        rotation += Math.random() * 3 * Math.PI/100;
+      }
+      
+      p.x += dx;
+      p.y += dy;
+
+      cleanPaint([p.x, p.y]);
+
+      return true
+    },
+    render:function(ctx, w, h){
+      ctx.globalCompositeOperation="source-over";
+      ctx.fillStyle="hsl(100, 100%, 50%)";
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.theta);
+      ctx.fillRect(-10, -10, 20, 20);
+      ctx.rotate(-p.theta);
+      ctx.translate(-p.x, -p.y);
+    }
+  };
+}
+
 function play(){
   var keys = 
           [ 0,  //left
@@ -103,6 +144,9 @@ function play(){
       dropPaint = function(p){
         playgroundCtx.fillStyle = "blue";
         playgroundCtx.fillRect(p[0], p[1], 5, 5);
+      },
+      cleanPaint = function(p){
+        playgroundCtx.clearRect(p[0] -10, p[1] -10, 20 , 20);
       }, 
       mainLoop = {
         _init : function(w, h){
@@ -110,7 +154,27 @@ function play(){
             x: w/2,
             y: h/2,
             theta : 0
-          }, dropPaint))
+          }, dropPaint));
+          loop.registerAnimation(createCleaner( {
+            x: w/2 + 50,
+            y: h/2 + 50,
+            theta : Math.PI 
+          }, cleanPaint))
+          loop.registerAnimation(createCleaner( {
+            x: w/2 - 50,
+            y: h/2 + 50,
+            theta : Math.PI/2
+          }, cleanPaint))
+          loop.registerAnimation(createCleaner( {
+            x: w/2 + 50,
+            y: h/2 - 50,
+            theta : 3 * Math.PI/2
+          }, cleanPaint))
+          loop.registerAnimation(createCleaner( {
+            x: w/2 - 50,
+            y: h/2 - 50,
+            theta : 0
+          }, cleanPaint))
         },
         animate : function(){
           return true;
