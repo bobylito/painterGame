@@ -98,26 +98,14 @@ function createCleaner(properties, cleanPaint){
   return {
     animate:function(time, w, h){
       var dx = 0,
-          dy = 0,
-          distanceTarget = l.distance(target, [p.x, p.y]);
+          dy = 0;
+      
+      var distanceTarget = this.distanceTarget(p, target);
       if(distanceTarget < 10){
         target = [Math.random() * w, Math.random() * h]; 
       }
-      
-      if( p.x < target[0] + 5 && target[0] -5 < p.x){
-        if(target[1] > p.y ){
-          p.theta = Math.PI/2
-        }
-        else{
-          p.theta = 3*Math.PI/2
-        }
-      }
-      else if(target[0] < p.x){
-        p.theta = Math.PI
-      }
-      else {
-        p.theta = 0
-      }
+
+      this.updateTheta2(p, target);
 
       dx = Math.cos(p.theta) * 3;
       dy = Math.sin(p.theta) * 3;
@@ -141,6 +129,32 @@ function createCleaner(properties, cleanPaint){
         ctx.fillStyle="#DDD";
         ctx.fillRect(target[0]-5, target[1]-5, 10,10);
       }
+    },
+    distanceTarget : function(p, target){
+      return l.distance(target, [p.x, p.y]);
+    },
+    updateTheta : function(p, target){
+
+      if( p.x < target[0] + 5 && target[0] -5 < p.x){
+        if(target[1] > p.y ){
+          p.theta = Math.PI/2;
+        }
+        else{
+          p.theta = 3*Math.PI/2;
+        }
+      }
+      else if(target[0] < p.x){
+        p.theta = Math.PI;
+      }
+      else {
+        p.theta = 0;
+      }
+      return p;
+    },
+    updateTheta2 : function(p, target){
+      var targetP = [target[0] - p.x, target[1] - p.y];
+      p.theta = Math.atan2(targetP[1] , targetP[0]);
+      return p;
     }
   };
 }
